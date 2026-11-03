@@ -9,3 +9,4 @@ spring:
     username: ${TRANSACTIONS_DB_USER:postgres}
     password: ${TRANSACTIONS_DB_PASSWORD:Mayank@7772}
     driver-class-name: org.postgresql.Driver
+

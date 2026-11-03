@@ -10,3 +10,4 @@ class AccountServiceApplicationTests {
     void contextLoads() {
     }
 }
+

@@ -19,3 +19,4 @@ SecureBank is a minimal, realistic banking application built as a target platfor
   - Account Service: `http://localhost:8081`
   - Transaction Service: `http://localhost:8082`
   - Frontend UI: `http://localhost:5173`
+
