@@ -25,3 +25,4 @@ public interface AccountRepository {
 
     long count();
 }
+

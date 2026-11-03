@@ -23,3 +23,4 @@ public class UpdateAccountStatusRequest {
         this.status = status;
     }
 }
+

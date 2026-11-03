@@ -171,3 +171,4 @@ class AccountServiceTest {
                 accountService.updateAccountStatus("acc-1001", new UpdateAccountStatusRequest(AccountStatus.ACTIVE)));
     }
 }
+

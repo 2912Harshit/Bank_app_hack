@@ -90,3 +90,4 @@ class AccountIntegrationTest {
                 .andExpect(jsonPath("$.status").value(400));
     }
 }
+

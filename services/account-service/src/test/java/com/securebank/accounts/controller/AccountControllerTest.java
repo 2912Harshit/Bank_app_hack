@@ -167,3 +167,4 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.status").value("FROZEN"));
     }
 }
+

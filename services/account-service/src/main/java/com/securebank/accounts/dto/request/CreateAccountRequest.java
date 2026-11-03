@@ -65,3 +65,4 @@ public class CreateAccountRequest {
         this.currency = currency;
     }
 }
+

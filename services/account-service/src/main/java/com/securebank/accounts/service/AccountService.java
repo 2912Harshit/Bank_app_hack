@@ -18,3 +18,4 @@ public interface AccountService {
 
     AccountResponse updateAccountStatus(String accountId, UpdateAccountStatusRequest request);
 }
+
