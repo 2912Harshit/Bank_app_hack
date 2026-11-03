@@ -10,6 +10,7 @@ import com.securebank.transactions.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public class TransactionServiceImpl implements TransactionService {
                 transactionId,
                 request.getAccountId().trim(),
                 request.getTransactionType(),
-                request.getAmount(),
+                request.getAmount().setScale(0, RoundingMode.DOWN),
                 currency,
                 request.getDescription().trim(),
                 reference,
