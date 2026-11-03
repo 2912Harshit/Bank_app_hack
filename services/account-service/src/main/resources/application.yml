@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: account-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/accounts_db
+    username: ${ACCOUNTS_DB_USER:postgres}
+    password: ${ACCOUNTS_DB_PASSWORD:Mayank@7772}
+    driver-class-name: org.postgresql.Driver
