@@ -213,3 +213,4 @@ All errors from both services follow the RFC 7807 compatible structure:
   }
 }
 ```
+
