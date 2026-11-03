@@ -140,3 +140,4 @@ class TransactionServiceTest {
         assertEquals(TransactionType.DEBIT, results.get(0).getTransactionType());
     }
 }
+

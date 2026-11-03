@@ -93,3 +93,4 @@ class TransactionIntegrationTest {
                 .andExpect(jsonPath("$.status").value(400));
     }
 }
+
