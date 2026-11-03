@@ -225,3 +225,4 @@ export const AccountsListPage: React.FC = () => {
     </div>
   );
 };
+

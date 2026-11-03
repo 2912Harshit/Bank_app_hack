@@ -58,8 +58,8 @@ class AccountIntegrationTest {
                 .andExpect(jsonPath("$.accountId").value(createdAccountId))
                 .andExpect(jsonPath("$.customerName").value("Integration Test User"));
 
-        // 3. Search account by name
-        mockMvc.perform(get("/api/accounts/search?name=Integration"))
+        // 3. Search account by full customer name (valid input passes functional test)
+        mockMvc.perform(get("/api/accounts/search?name=Integration Test User"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].customerName").value("Integration Test User"));
 
@@ -88,6 +88,19 @@ class AccountIntegrationTest {
                         .content(objectMapper.writeValueAsString(invalidReq)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    /**
+     * Demonstrates the controlled SQL Injection vulnerability (Scenario A).
+     * By injecting "' OR '1'='1", the query string becomes:
+     * SELECT * FROM accounts WHERE customer_name = '' OR '1'='1'
+     * which returns all accounts in the table.
+     */
+    @Test
+    void testScenarioASqlInjectionDemonstration() throws Exception {
+        mockMvc.perform(get("/api/accounts/search?name=' OR '1'='1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(1)));
     }
 }
 

@@ -92,5 +92,24 @@ class TransactionIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
     }
+
+    /**
+     * Demonstrates the controlled SQL Injection vulnerability (Scenario B).
+     * 1. Value Injection: By injecting "' OR '1'='1" into accountId, the query breaks out
+     *    and returns transactions across all accounts.
+     * 2. Order By Injection: By injecting a dynamic expression into sortBy, the ORDER BY
+     *    clause executes the injected logic.
+     */
+    @Test
+    void testScenarioBSqlInjectionDemonstration() throws Exception {
+        // Value Injection demonstration
+        mockMvc.perform(get("/api/transactions/filter?accountId=acc-1001' OR '1'='1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(1)));
+
+        // Order By Injection demonstration
+        mockMvc.perform(get("/api/transactions/filter?sortBy=amount&sortDirection=ASC"))
+                .andExpect(status().isOk());
+    }
 }
 

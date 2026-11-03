@@ -23,3 +23,4 @@ export interface CreateAccountPayload {
 export interface UpdateAccountStatusPayload {
   status: AccountStatus;
 }
+

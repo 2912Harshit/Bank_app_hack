@@ -30,3 +30,4 @@ export interface TransactionFilterParams {
   sortBy?: string;
   sortDirection?: 'ASC' | 'DESC';
 }
+

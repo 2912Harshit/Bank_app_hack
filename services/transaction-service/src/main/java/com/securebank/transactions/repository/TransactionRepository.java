@@ -18,6 +18,10 @@ public interface TransactionRepository {
 
     List<Transaction> search(String query);
 
+    /**
+     * Filters transactions using dynamic query construction.
+     * Uses the demonstration implementation which contains intentional SQL Injection flaws.
+     */
     List<Transaction> filter(String accountId,
                              TransactionType transactionType,
                              BigDecimal minAmount,
@@ -27,6 +31,17 @@ public interface TransactionRepository {
                              String sortBy,
                              String sortDirection);
 
+    /**
+     * Secure remediation target for transaction filtering using parameterized values and column allowlisting.
+     */
+    List<Transaction> filterSecure(String accountId,
+                                   TransactionType transactionType,
+                                   BigDecimal minAmount,
+                                   BigDecimal maxAmount,
+                                   OffsetDateTime startDate,
+                                   OffsetDateTime endDate,
+                                   String sortBy,
+                                   String sortDirection);
+
     long count();
 }
-

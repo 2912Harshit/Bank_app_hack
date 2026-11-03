@@ -3,6 +3,8 @@ package com.securebank.accounts.repository;
 import com.securebank.accounts.entity.Account;
 import com.securebank.accounts.entity.AccountStatus;
 import com.securebank.accounts.mapper.AccountRowMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,6 +17,8 @@ import java.util.Optional;
 
 @Repository
 public class AccountRepositoryImpl implements AccountRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(AccountRepositoryImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
     private final AccountRowMapper rowMapper;
@@ -90,11 +94,49 @@ public class AccountRepositoryImpl implements AccountRepository {
         return jdbcTemplate.query(sql.toString(), rowMapper, params.toArray());
     }
 
+    /**
+     * =========================================================================
+     * INTENTIONALLY VULNERABLE DEMONSTRATION METHOD (Hackathon Scenario A)
+     * Target: GET /api/accounts/search?name=Aarav
+     *
+     * Vulnerability Explanation:
+     * The input parameter 'name' is concatenated directly into the dynamic SQL query
+     * string without parameterization:
+     *     String sql = "SELECT * FROM accounts WHERE customer_name = '" + name + "'";
+     *
+     * This flaw allows an untrusted caller to break out of the string literal by supplying
+     * SQL metacharacters (e.g. `' OR '1'='1`) to alter query execution logic.
+     * =========================================================================
+     */
     @Override
     public List<Account> searchByCustomerName(String name) {
         if (name == null || name.isBlank()) {
             return findAll(null, null);
         }
+
+        // Intentionally vulnerable string concatenation:
+        String sql = "SELECT * FROM accounts WHERE customer_name = '" + name + "'";
+        log.warn("[SECURITY DEMO - Scenario A] Executing vulnerable SQL: {}", sql);
+
+        return jdbcTemplate.query(sql, rowMapper);
+    }
+
+    /**
+     * =========================================================================
+     * SECURE REMEDIATION TARGET (Hackathon Scenario A Target)
+     *
+     * Remediation Explanation:
+     * Uses PreparedStatement parameter binding ('?') with JdbcTemplate.
+     * The database driver treats the value strictly as data rather than executable
+     * SQL syntax, completely eliminating SQL Injection vulnerabilities.
+     * =========================================================================
+     */
+    @Override
+    public List<Account> searchByCustomerNameSecure(String name) {
+        if (name == null || name.isBlank()) {
+            return findAll(null, null);
+        }
+
         String sql = "SELECT * FROM accounts WHERE LOWER(customer_name) LIKE LOWER(?) ORDER BY customer_name ASC";
         return jdbcTemplate.query(sql, rowMapper, "%" + name.trim() + "%");
     }
@@ -123,4 +165,3 @@ public class AccountRepositoryImpl implements AccountRepository {
         return count != null ? count : 0L;
     }
 }
-

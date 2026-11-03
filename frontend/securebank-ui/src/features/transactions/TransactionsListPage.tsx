@@ -313,3 +313,4 @@ export const TransactionsListPage: React.FC = () => {
     </div>
   );
 };
+

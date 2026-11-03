@@ -3,6 +3,8 @@ package com.securebank.transactions.repository;
 import com.securebank.transactions.entity.Transaction;
 import com.securebank.transactions.entity.TransactionType;
 import com.securebank.transactions.mapper.TransactionRowMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,10 +17,12 @@ import java.util.*;
 @Repository
 public class TransactionRepositoryImpl implements TransactionRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(TransactionRepositoryImpl.class);
+
     private final JdbcTemplate jdbcTemplate;
     private final TransactionRowMapper rowMapper;
 
-    // Strict allowlist for ordering columns
+    // Strict allowlist used by the secure remediation implementation
     private static final Set<String> ALLOWED_SORT_COLUMNS = Set.of(
             "created_at", "amount", "transaction_type", "account_id"
     );
@@ -70,7 +74,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     @Override
     public List<Transaction> search(String query) {
         if (query == null || query.isBlank()) {
-            return filter(null, null, null, null, null, null, "created_at", "DESC");
+            return filterSecure(null, null, null, null, null, null, "created_at", "DESC");
         }
         String sql = """
             SELECT * FROM transactions
@@ -81,6 +85,22 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return jdbcTemplate.query(sql, rowMapper, pattern, pattern);
     }
 
+    /**
+     * =========================================================================
+     * INTENTIONALLY VULNERABLE DEMONSTRATION METHOD (Hackathon Scenario B)
+     * Target: GET /api/transactions/filter
+     *
+     * Vulnerability Explanation:
+     * 1. Value SQL Injection: String parameters (such as 'accountId') are directly
+     *    concatenated into the WHERE clause without parameter placeholders:
+     *        sql.append(" AND account_id = '").append(accountId).append("'");
+     * 2. Identifier SQL Injection (ORDER BY): SQL identifiers (column names and directions)
+     *    cannot be parameterized by JDBC PreparedStatement. Directly concatenating
+     *    untrusted sortBy/sortDirection inputs into the ORDER BY clause exposes the query
+     *    to syntax injection and second-order boolean-based blind techniques:
+     *        sql.append(" ORDER BY ").append(sortBy).append(" ").append(sortDirection);
+     * =========================================================================
+     */
     @Override
     public List<Transaction> filter(String accountId,
                                     TransactionType transactionType,
@@ -90,6 +110,63 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                                     OffsetDateTime endDate,
                                     String sortBy,
                                     String sortDirection) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM transactions WHERE 1=1");
+
+        // Vulnerability 1: Direct string concatenation for accountId
+        if (accountId != null && !accountId.isBlank()) {
+            sql.append(" AND account_id = '").append(accountId).append("'");
+        }
+
+        if (transactionType != null) {
+            sql.append(" AND transaction_type = '").append(transactionType.name()).append("'");
+        }
+
+        if (minAmount != null) {
+            sql.append(" AND amount >= ").append(minAmount);
+        }
+
+        if (maxAmount != null) {
+            sql.append(" AND amount <= ").append(maxAmount);
+        }
+
+        if (startDate != null) {
+            sql.append(" AND created_at >= '").append(Timestamp.from(startDate.toInstant())).append("'");
+        }
+
+        if (endDate != null) {
+            sql.append(" AND created_at <= '").append(Timestamp.from(endDate.toInstant())).append("'");
+        }
+
+        // Vulnerability 2: Unsafe ORDER BY clause without allowlisting
+        String orderField = (sortBy != null && !sortBy.isBlank()) ? sortBy : "created_at";
+        String orderDir = (sortDirection != null && !sortDirection.isBlank()) ? sortDirection : "DESC";
+
+        sql.append(" ORDER BY ").append(orderField).append(" ").append(orderDir);
+
+        log.warn("[SECURITY DEMO - Scenario B] Executing vulnerable dynamic SQL: {}", sql);
+
+        return jdbcTemplate.query(sql.toString(), rowMapper);
+    }
+
+    /**
+     * =========================================================================
+     * SECURE REMEDIATION TARGET (Hackathon Scenario B Target)
+     *
+     * Remediation Explanation:
+     * 1. Uses PreparedStatement parameter binding ('?') for all filter values.
+     * 2. Validates sort columns against a strict static allowlist (ALLOWED_SORT_COLUMNS).
+     * 3. Validates sort direction strictly to 'ASC' or 'DESC'.
+     * =========================================================================
+     */
+    @Override
+    public List<Transaction> filterSecure(String accountId,
+                                          TransactionType transactionType,
+                                          BigDecimal minAmount,
+                                          BigDecimal maxAmount,
+                                          OffsetDateTime startDate,
+                                          OffsetDateTime endDate,
+                                          String sortBy,
+                                          String sortDirection) {
         StringBuilder sql = new StringBuilder("SELECT * FROM transactions WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
@@ -123,7 +200,6 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             params.add(Timestamp.from(endDate.toInstant()));
         }
 
-        // Validate and apply sort column from strict allowlist
         String validatedSort = (sortBy != null && ALLOWED_SORT_COLUMNS.contains(sortBy.toLowerCase()))
                 ? sortBy.toLowerCase()
                 : "created_at";
@@ -142,4 +218,3 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return count != null ? count : 0L;
     }
 }
-

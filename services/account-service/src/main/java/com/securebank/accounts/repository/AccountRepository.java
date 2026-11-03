@@ -17,7 +17,16 @@ public interface AccountRepository {
 
     List<Account> findAll(String userId, String status);
 
+    /**
+     * Search by customer name.
+     * Uses the demonstration implementation which contains the intentional SQL Injection flaw.
+     */
     List<Account> searchByCustomerName(String name);
+
+    /**
+     * Secure remediation target for customer name search using parameterized queries.
+     */
+    List<Account> searchByCustomerNameSecure(String name);
 
     int updateStatus(String accountId, AccountStatus status, OffsetDateTime updatedAt);
 
@@ -25,4 +34,3 @@ public interface AccountRepository {
 
     long count();
 }
-

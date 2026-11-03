@@ -34,3 +34,4 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'neutral', cla
     </span>
   );
 };
+
