@@ -105,3 +105,4 @@ sql.append(" ORDER BY ").append(validatedSort).append(" ").append(validatedDirec
 ## 4. Security Verification Notes
 - **Functional Tests Pass**: Ordinary functional tests using valid synthetic inputs pass successfully on both vulnerable and secure implementations.
 - **Functional Testing Limitation**: Standard unit and regression tests do not assert SQL injection safety. The Proactive Shift-Left Defense platform identifies the vulnerable patterns via static taint analysis and semantic code graph inspection.
+
